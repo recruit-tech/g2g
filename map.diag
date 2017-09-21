@@ -1,0 +1,8 @@
+blockdiag{
+A_top -> B_TOP -> 日本語test -> それぞれの項目_TOP;
+A_top -> C_TOP -> C_detail_page -> にホN語test -> それぞれの項目_TOP;
+A_top -> list_view -> それぞれの項目_TOP;
+それぞれの項目_TOP -> D_PAGE -> D_NEXT_PAGE;
+それぞれの項目_TOP -> E_PAGE -> E_NEXT_PAGE;
+E_PAGE -> branch_PAGE;
+}
