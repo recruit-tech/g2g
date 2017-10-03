@@ -1,6 +1,12 @@
 # What's this
 
-サービスのTOP画面からの遷移図をnode-edge な graphにうまく描画してくれるツールです
+サービスのTOP画面からの遷移図をnode-edge な raphにうまく描画してくれるツールです
+
+# requirements
+
+```
+ easy_install -U reportlab
+```
 
 # How To Use
 
