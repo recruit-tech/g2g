@@ -7,6 +7,7 @@ from matplotlib import colors as mcolors
 import math
 from typing import List, Tuple
 import parse
+from blockdiag.command import main as blockdiag_main
 
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
@@ -305,3 +306,5 @@ if __name__ == '__main__':
     name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
     # output file
     to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
+    blockdiag_main(["-Tpdf", "sample/out.diag"]) # output pdf
+    blockdiag_main(["sample/out.diag"]) # output png
