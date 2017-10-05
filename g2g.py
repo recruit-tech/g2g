@@ -13,10 +13,10 @@ colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
 def shape_string(string: str) -> str:
     """ shape string (remove space)
-    
+
     Args:
         string: string you want to shaping
-    
+
     Returns:
         shaped(space removed) string
     """
@@ -31,7 +31,7 @@ def get_dataframe(book_name:str) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     Returns:
         node dataframe, color dataframe.
-    """    
+    """
     EXL = pd.ExcelFile(book_name)
     df_color = EXL.parse("color")
     df_node = EXL.parse("node")
@@ -39,8 +39,8 @@ def get_dataframe(book_name:str) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 def is_color(string: str) -> bool:
     """ Return the string passed is whether or not intended to represent the color.
-    
-    "string indicate color" means 
+
+    "string indicate color" means
     RGB(%d, %d, %d), or
     matplotlib color.
     if you want add rule, add rule to this function.
@@ -59,20 +59,20 @@ def is_color(string: str) -> bool:
 
 def get_code(string: str) -> str:
     """ RGB(%d,%d,%d) or matplotlib color(e.g. red, blue ...) -> RGB(%02X, %02x, %02X)(e.g. #AABBCC)
-    
+
     from decimanl numbered RGB or matplotlib color to hex numbered RGB
     if you want to add rule, add convert method in this function
-    
+
     Args:
         string: string data to convert to hex number
-        
+
     Returns:
         RGB data written in hex number
-    
+
     Raise:
         if string is not indicate color, raise ValueError
     """
-    
+
     if not is_color(string):
         raise ValueError("color code must be matplotlib colors or RGB(%d, %d, %d)")
     # RGB(%d, %d, %d) style
@@ -85,17 +85,17 @@ def get_code(string: str) -> str:
 
 def is_selector(string: str, selector_method_dict) -> bool:
     """ Return the string passed is whether or not "selector".
-    
+
     selector is a function that determines nodes to color.
-    
+
     Args:
         string: String for determining whether it is a selector
         selector_method_dict: selector:method dict
-    
+
     Returns:
         is string selector?
     """
-    
+
     # RGB() is not selector(color)
     if is_color(string): return False
     func = parse.parse("{}({})", string)
@@ -111,12 +111,12 @@ def is_selector(string: str, selector_method_dict) -> bool:
 
 def get_method_value(string: str) -> Tuple[str, List[float]]:
     """ selector XXXXXX(value) => XXXXXX, [float(value)].
-    
+
     separate function name and argument.
-    
+
     Args:
         string: string data to separate.
-    
+
     Returns:
         function name, argument value.
     """
@@ -128,19 +128,19 @@ def get_method_value(string: str) -> Tuple[str, List[float]]:
 
 def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
     """ make selector_color_dict from df_color(excel file).
-    
+
     selector_color_dict means "Which range shows which color".
-    TODO: %で割合にする仕様を追加する 
+    TODO: %で割合にする仕様を追加する
     10 RGB(255,0,0) 20 TOP3 RGB(0,255,0) ...
     => [{selector: equation, color: colormap or color or [color] }]
     selector: MINMAX ... MIN <= x <= MAX 's color is "color"Args:
     selector: TOPx ... TOP x 's color is "color"    df_color: color data readed from excel file.
         selector_method_dict: (selector: method(function)) dict.
-    
+
     Returns:
         selector_color_dict: Which range shows which color
     """
-    
+
     # first, Interpret each line
     # [("color", colorcode) or ("selector", {"method":method, value:value}) or ("number", value)]
     selector_number_color_dict = []
@@ -187,18 +187,18 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
             if(sel != ""): selector_color_dicts.append({"selector": sel, "color" : selector_number_color_dict[i][1]})
             # else it means MINMAX selector
             else: selector_color_dicts.append({"selector": {"method": "MINMAX", "values": [prv, nxt]}, "color" : selector_number_color_dict[i][1]})
-    
+
     return selector_color_dicts
 
 def get_name_color_dict(df_node: pd.DataFrame, column_name, selector_method_dict, selector_color_dicts):
     """ make correspondence dict of which name indicates which color.
-    
+
     Args:
         df_node: node dataframe
-        column_name: 
+        column_name:
         selector_method_dict: selector:method dict
         selector_color_dicts: [selector:color] dict
-    
+
     Returns:
         correspondence dict of which name indicates which color.
     """
@@ -214,12 +214,12 @@ def get_name_color_dict(df_node: pd.DataFrame, column_name, selector_method_dict
         if "名前" in df_node.columns:
             for n in selected_row["名前"]:
                 name_color_dict[n] = color
-            
+
     return name_color_dict
 
 def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_color_dict) -> None:
     """ make diag data from df_node, name_color_dict
-    
+
     Args:
         output_filename: output filename
         edge_filename: edge filename(aaa -> bbb; bbb->ccc ...)
@@ -234,7 +234,7 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
 
     # Cut off the last 4 characters (eliminate the last newline)
     df_node["label"] = df_node["label"].map(lambda x:x[:-4])
-    
+
     # Variable for deleting the last}
     last_bracket_pos = 0
     i = 0
@@ -249,7 +249,7 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     output = output[:last_bracket_pos]
 
     output.append('\n')
-    
+
     # get text_
     max_text_width_length = 0
     max_text_height_count = df_node.shape[1]
@@ -258,13 +258,13 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
         if(column == "名前"): cnt = df_node[column].astype(str).str.len()[1:].max()
         else: cnt = df_node[column].astype(str).str.len()[1:].max() + len(str(df_node[column][0])) # 横幅
         max_text_width_length = max(max_text_width_length, cnt)
-    
+
     # set node size
     font_size = 7
     height = 40 + max_text_height_count*font_size # default heigth size is 40
     width = 128 + max_text_width_length*font_size # default width size is 128
-    
-    # node information 
+
+    # node information
     for key, row in df_node.iterrows():
         output.append(row["名前"] + "[label=\"" + row["label"] + "\", color=\"" + name_color_dict[row["名前"]] +"\",height="+str(height)+",width="+str(width)+"];\n");
 
@@ -290,7 +290,7 @@ def min_max(df_node, column_name, values):
     if(values[0] is not math.nan): selected_row = selected_row[values[0] <= selected_row[column_name]]
     if(values[1] is not math.nan): selected_row = selected_row[values[1] > selected_row[column_name]]
     return selected_row
-            
+
 default_selector_method_dict = {
     "TOP": get_top,
     "MINMAX": min_max,
@@ -305,4 +305,3 @@ if __name__ == '__main__':
     name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
     # output file
     to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
-
