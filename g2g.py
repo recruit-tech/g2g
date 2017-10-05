@@ -1,7 +1,5 @@
-
+#/usr/bin/python3
 # coding: utf-8
-
-# In[183]:
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,14 +8,8 @@ import math
 from typing import List, Tuple
 import parse
 
-
-# In[184]:
-
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
-
-
-# In[185]:
 
 def shape_string(string: str) -> str:
     """ shape string (remove space)
@@ -30,9 +22,6 @@ def shape_string(string: str) -> str:
     """
     string.replace(" ", "")
     return string
-
-
-# In[186]:
 
 def get_dataframe(book_name:str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """get dataframe from excel file.
@@ -47,9 +36,6 @@ def get_dataframe(book_name:str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     df_color = EXL.parse("color")
     df_node = EXL.parse("node")
     return df_node, df_color
-
-
-# In[187]:
 
 def is_color(string: str) -> bool:
     """ Return the string passed is whether or not intended to represent the color.
@@ -71,9 +57,6 @@ def is_color(string: str) -> bool:
     return ((parse.parse("RGB({:d},{:d},{:d})", string) is not None) or (string in colors))
 
 
-# In[188]:
-
-# RGB や matplotlib colorsにhitした時にcolor codeを返す(format: #ABCDEF)
 def get_code(string: str) -> str:
     """ RGB(%d,%d,%d) or matplotlib color(e.g. red, blue ...) -> RGB(%02X, %02x, %02X)(e.g. #AABBCC)
     
@@ -99,9 +82,6 @@ def get_code(string: str) -> str:
     # matplotlib color style
     elif string in colors:
         return colors[string]
-
-
-# In[189]:
 
 def is_selector(string: str, selector_method_dict) -> bool:
     """ Return the string passed is whether or not "selector".
@@ -129,9 +109,6 @@ def is_selector(string: str, selector_method_dict) -> bool:
         return name in selector_method_dict
     return False
 
-
-# In[190]:
-
 def get_method_value(string: str) -> Tuple[str, List[float]]:
     """ selector XXXXXX(value) => XXXXXX, [float(value)].
     
@@ -148,8 +125,6 @@ def get_method_value(string: str) -> Tuple[str, List[float]]:
     args = func[1].split(",")
     return name, args
 
-
-# In[191]:
 
 def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
     """ make selector_color_dict from df_color(excel file).
@@ -215,9 +190,6 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
     
     return selector_color_dicts
 
-
-# In[192]:
-
 def get_name_color_dict(df_node: pd.DataFrame, column_name, selector_method_dict, selector_color_dicts):
     """ make correspondence dict of which name indicates which color.
     
@@ -244,9 +216,6 @@ def get_name_color_dict(df_node: pd.DataFrame, column_name, selector_method_dict
                 name_color_dict[n] = color
             
     return name_color_dict
-
-
-# In[193]:
 
 def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_color_dict) -> None:
     """ make diag data from df_node, name_color_dict
@@ -307,8 +276,6 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.close()
 
 
-# In[194]:
-
 # method names
 
 def get_top(df_node, column_name, values):
@@ -328,9 +295,6 @@ default_selector_method_dict = {
     "TOP": get_top,
     "MINMAX": min_max,
 }
-
-
-# In[195]:
 
 if __name__ == '__main__':
     # read data
