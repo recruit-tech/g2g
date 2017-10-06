@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import math
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
 import parse
 from blockdiag.command import main as blockdiag_main
 
@@ -110,7 +110,7 @@ def is_selector(string: str, selector_method_dict) -> bool:
         return name in selector_method_dict
     return False
 
-def get_method_value(string: str) -> Tuple[str, List[float]]:
+def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     """ selector XXXXXX(value) => XXXXXX, [float(value)].
 
     separate function name and argument.
@@ -158,9 +158,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         elif is_selector(row, selector_method_dict):
             method, values = get_method_value(row)
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
+        # number
         elif row.isdigit():
-            n = float(row)
-            selector_number_color_dict.append(("number" , n))
+            selector_number_color_dict.append(("number" , row))
 
     # make MINMAX method from Color sandwiched between numbers
     selector_color_dicts = [];
@@ -193,7 +193,7 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
 
 def get_name_color_dict(df_node: pd.DataFrame, column_name, selector_method_dict, selector_color_dicts):
     """ make correspondence dict of which name indicates which color.
-
+et
     Args:
         df_node: node dataframe
         column_name:
@@ -288,8 +288,10 @@ def get_top(df_node, column_name, values):
 
 def min_max(df_node, column_name, values):
     selected_row = df_node.copy();
-    if(values[0] is not math.nan): selected_row = selected_row[values[0] <= selected_row[column_name]]
-    if(values[1] is not math.nan): selected_row = selected_row[values[1] > selected_row[column_name]]
+    left = float(values[0])
+    right = float(values[1])
+    if(left is not math.nan): selected_row = selected_row[left <= selected_row[column_name]]
+    if(right is not math.nan): selected_row = selected_row[right > selected_row[column_name]]
     return selected_row
 
 default_selector_method_dict = {
