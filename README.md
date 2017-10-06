@@ -5,7 +5,9 @@
 # requirements
 
 ```
- easy_install -U reportlab
+ pip install reportlab
+ pip install parse
+ pip install blockdiag
 ```
 
 # How To Use
