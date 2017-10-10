@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import math
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
 import parse
 from blockdiag.command import main as blockdiag_main
 
@@ -43,15 +43,7 @@ def is_color(string: str) -> bool:
 
     "string indicate color" means
     RGB(%d, %d, %d), or
-    matplotlib color.
-    if you want add rule, add rule to this function.
-
-    Args:
-        string: string data to judge indecating color or not.
-
-    Returns:
-        the string passed is whether or not intended to represent the color.
-        true: it's color.
+    matplotlib color
         false: it isn't color.
     """
     string = shape_string(string)
@@ -110,7 +102,7 @@ def is_selector(string: str, selector_method_dict) -> bool:
         return name in selector_method_dict
     return False
 
-def get_method_value(string: str) -> Tuple[str, List[float]]:
+def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     """ selector XXXXXX(value) => XXXXXX, [float(value)].
 
     separate function name and argument.
@@ -158,9 +150,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         elif is_selector(row, selector_method_dict):
             method, values = get_method_value(row)
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
-        elif row.isdigit():
-            n = float(row)
-            selector_number_color_dict.append(("number" , n))
+        # number
+        else:
+            selector_number_color_dict.append(("number" , row))
 
     # make MINMAX method from Color sandwiched between numbers
     selector_color_dicts = [];
@@ -168,9 +160,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         if(selector_number_color_dict[i][0] == "color"):
             # default number is nan
             # prv: preview row
-            prv = math.nan
+            prv = ""
             # nxt: next row
-            nxt = math.nan
+            nxt = ""
             # sel: selector
             sel = ""
 
@@ -193,7 +185,7 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
 
 def get_name_color_dict(df_node: pd.DataFrame, column_name, selector_method_dict, selector_color_dicts):
     """ make correspondence dict of which name indicates which color.
-
+et
     Args:
         df_node: node dataframe
         column_name:
@@ -287,9 +279,28 @@ def get_top(df_node, column_name, values):
     return selected_row
 
 def min_max(df_node, column_name, values):
+    print(values)
     selected_row = df_node.copy();
-    if(values[0] is not math.nan): selected_row = selected_row[values[0] <= selected_row[column_name]]
-    if(values[1] is not math.nan): selected_row = selected_row[values[1] > selected_row[column_name]]
+    maxi = df_node[column_name].max()
+    mini = df_node[column_name].min()
+    left = -math.inf
+    right = math.inf
+    print(mini, maxi)
+    if(values[0][-1:] is "p"):
+        per = float(values[0][:-1]) / 100.0
+        left = (maxi-mini) * per + mini
+        print(left)
+    elif(values[0] is not ""):
+        left = float(values[0])
+    if(values[1][-1:] is "p"):
+        per = float(values[1][:-1]) / 100.0
+        right = (maxi-mini) * per + mini
+        print(right)
+    elif(values[1] is not ""):
+        right = float(values[1])
+
+    selected_row = selected_row[left <= selected_row[column_name]]
+    selected_row = selected_row[right > selected_row[column_name]]
     return selected_row
 
 default_selector_method_dict = {
