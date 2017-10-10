@@ -159,7 +159,7 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
             method, values = get_method_value(row)
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
         # number
-        elif row.isdigit():
+        else:
             selector_number_color_dict.append(("number" , row))
 
     # make MINMAX method from Color sandwiched between numbers
@@ -168,9 +168,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         if(selector_number_color_dict[i][0] == "color"):
             # default number is nan
             # prv: preview row
-            prv = math.nan
+            prv = ""
             # nxt: next row
-            nxt = math.nan
+            nxt = ""
             # sel: selector
             sel = ""
 
@@ -287,11 +287,26 @@ def get_top(df_node, column_name, values):
     return selected_row
 
 def min_max(df_node, column_name, values):
+    print(values)
+    values[0].replace(" ", "")
+    values[1].replace(" ", "")
     selected_row = df_node.copy();
-    left = float(values[0])
-    right = float(values[1])
-    if(left is not math.nan): selected_row = selected_row[left <= selected_row[column_name]]
-    if(right is not math.nan): selected_row = selected_row[right > selected_row[column_name]]
+    left = -math.inf
+    right = math.inf
+
+    mini = df_node[column_name].min()
+    maxi = df_node[column_name].max()
+    print(mini, maxi)
+
+    if values[0][-3:] == "per":
+        values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
+    if values[0] != "": left = float(values[0])
+
+    if values[1][-3:] == "per":
+        values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
+    if values[1] != "": right = float(values[1])
+    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
+    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
     return selected_row
 
 default_selector_method_dict = {
