@@ -43,7 +43,15 @@ def is_color(string: str) -> bool:
 
     "string indicate color" means
     RGB(%d, %d, %d), or
-    matplotlib color
+    matplotlib color.
+    if you want add rule, add rule to this function.
+
+    Args:
+        string: string data to judge indecating color or not.
+
+    Returns:
+        the string passed is whether or not intended to represent the color.
+        true: it's color.
         false: it isn't color.
     """
     string = shape_string(string)
@@ -280,27 +288,25 @@ def get_top(df_node, column_name, values):
 
 def min_max(df_node, column_name, values):
     print(values)
+    values[0].replace(" ", "")
+    values[1].replace(" ", "")
     selected_row = df_node.copy();
-    maxi = df_node[column_name].max()
-    mini = df_node[column_name].min()
     left = -math.inf
     right = math.inf
-    print(mini, maxi)
-    if(values[0][-1:] is "p"):
-        per = float(values[0][:-1]) / 100.0
-        left = (maxi-mini) * per + mini
-        print(left)
-    elif(values[0] is not ""):
-        left = float(values[0])
-    if(values[1][-1:] is "p"):
-        per = float(values[1][:-1]) / 100.0
-        right = (maxi-mini) * per + mini
-        print(right)
-    elif(values[1] is not ""):
-        right = float(values[1])
 
-    selected_row = selected_row[left <= selected_row[column_name]]
-    selected_row = selected_row[right > selected_row[column_name]]
+    mini = df_node[column_name].min()
+    maxi = df_node[column_name].max()
+    print(mini, maxi)
+
+    if values[0][-3:] == "per":
+        values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
+    if values[0] != "": left = float(values[0])
+
+    if values[1][-3:] == "per":
+        values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
+    if values[1] != "": right = float(values[1])
+    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
+    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
     return selected_row
 
 default_selector_method_dict = {
