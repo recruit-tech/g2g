@@ -38,27 +38,7 @@ def get_dataframe(book_name:str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     df_node = EXL.parse("node")
     return df_node, df_color
 
-def is_color(string: str) -> bool:
-    """ Return the string passed is whether or not intended to represent the color.
-
-    "string indicate color" means
-    RGB(%d, %d, %d), or
-    matplotlib color.
-    if you want add rule, add rule to this function.
-
-    Args:
-        string: string data to judge indecating color or not.
-
-    Returns:
-        the string passed is whether or not intended to represent the color.
-        true: it's color.
-        false: it isn't color.
-    """
-    string = shape_string(string)
-    return ((parse.parse("RGB({:d},{:d},{:d})", string) is not None) or (string in colors))
-
-
-def get_code(string: str) -> str:
+def get_color_code(string: str) -> Optional[str]:
     """ RGB(%d,%d,%d) or matplotlib color(e.g. red, blue ...) -> RGB(%02X, %02x, %02X)(e.g. #AABBCC)
 
     from decimanl numbered RGB or matplotlib color to hex numbered RGB
@@ -74,41 +54,17 @@ def get_code(string: str) -> str:
         if string is not indicate color, raise ValueError
     """
 
-    if not is_color(string):
-        raise ValueError("color code must be matplotlib colors or RGB(%d, %d, %d)")
+    string = shape_string(string)
+    parse_string = parse.parse("RGB({:d},{:d},{:d})", string);
     # RGB(%d, %d, %d) style
-    if "RGB" in string:
+    if parse_string is not None:
         a = parse.parse("RGB({:d},{:d},{:d})", string)
         return '#%02X%02X%02X' % (a[0], a[1], a[2])
     # matplotlib color style
     elif string in colors:
         return colors[string]
-
-def is_selector(string: str, selector_method_dict) -> bool:
-    """ Return the string passed is whether or not "selector".
-
-    selector is a function that determines nodes to color.
-
-    Args:
-        string: String for determining whether it is a selector
-        selector_method_dict: selector:method dict
-
-    Returns:
-        is string selector?
-    """
-
-    # RGB() is not selector(color)
-    if is_color(string): return False
-    func = parse.parse("{}({})", string)
-    # string is func
-    if(func is not None):
-        name = func[0]
-        args = func[1].split(",")
-        print("string:", string)
-        print("name:", name)
-        print("args:", args)
-        return name in selector_method_dict
-    return False
+    else:
+        return None
 
 def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     """ selector XXXXXX(value) => XXXXXX, [float(value)].
@@ -121,7 +77,11 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     Returns:
         function name, argument value.
     """
+    if get_color_code(string) is not None:
+        return None, None
     func = parse.parse("{}({})", string)
+    if func is None:
+        return None, None
     name = func[0]
     args = func[1].split(",")
     return name, args
@@ -151,12 +111,13 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
     for i in range(df_color[column_name].size):
         row = df_color[column_name][i]
         row = str(row)
+        code = get_color_code(row)
+        method, values = get_method_value(row)
         # color
-        if is_color(row):
-            selector_number_color_dict.append(("color", get_code(row)))
+        if code is not None:
+            selector_number_color_dict.append(("color", code))
         # selector
-        elif is_selector(row, selector_method_dict):
-            method, values = get_method_value(row)
+        elif method is not None:
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
         # number
         else:
