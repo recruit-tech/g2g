@@ -112,12 +112,12 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         row = df_color[column_name][i]
         row = str(row)
         code = get_color_code(row)
+        method, values = get_method_value(row)
         # color
         if code is not None:
             selector_number_color_dict.append(("color", code))
         # selector
-        elif is_selector(row, selector_method_dict):
-            method, values = get_method_value(row)
+        elif method is not None:
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
         # number
         else:
