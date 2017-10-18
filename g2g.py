@@ -11,6 +11,7 @@ from blockdiag.command import main as blockdiag_main
 
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+color_maps = sorted(m for m in plt.cm.datad if not m.endswith("_r"))
 
 def shape_string(string: str) -> str:
     """ shape string (remove space)
@@ -116,6 +117,8 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         # color
         if code is not None:
             selector_number_color_dict.append(("color", code))
+        elif row in color_maps:
+            selector_number_color_dict.append(("color_map", row))
         # selector
         elif method is not None:
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
@@ -124,9 +127,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
             selector_number_color_dict.append(("number" , row))
 
     # make MINMAX method from Color sandwiched between numbers
-    selector_color_dicts = [];
+    selector_color_dicts = []
     for i in range(len(selector_number_color_dict)):
-        if(selector_number_color_dict[i][0] == "color"):
+        if(selector_number_color_dict[i][0] == "color" or selector_number_color_dict[i][0] == "color_map"):
             # default number is nan
             # prv: preview row
             prv = ""
@@ -146,9 +149,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
                 nxt = selector_number_color_dict[i+1][1]
 
             # if this row means selector, add as it is
-            if(sel != ""): selector_color_dicts.append({"selector": sel, "color" : selector_number_color_dict[i][1]})
+            if(sel != ""): selector_color_dicts.append({"selector": sel, selector_number_color_dict[i][0] : selector_number_color_dict[i][1]})
             # else it means MINMAX selector
-            else: selector_color_dicts.append({"selector": {"method": "MINMAX", "values": [prv, nxt]}, "color" : selector_number_color_dict[i][1]})
+            else: selector_color_dicts.append({"selector": {"method": "MINMAX", "values": [prv, nxt]}, selector_number_color_dict[i][0] : selector_number_color_dict[i][1]})
 
     return selector_color_dicts
 
@@ -168,14 +171,18 @@ et
     for dic in selector_color_dicts:
         method = dic["selector"]["method"]
         values = dic["selector"]["values"]
-        color = dic["color"]
         if(method in selector_method_dict):
             selected_row = selector_method_dict[method](df_node, column_name, values)
             print(selected_row)
 
-        if "名前" in df_node.columns:
-            for n in selected_row["名前"]:
-                name_color_dict[n] = color
+        if "color_map" in dic:
+            color_map = dic["color_map"]
+
+        elif "color" in dic:
+            color = dic["color"]
+            if "名前" in df_node.columns:
+                for n in selected_row["名前"]:
+                    name_color_dict[n] = color
 
     return name_color_dict
 
@@ -280,8 +287,10 @@ if __name__ == '__main__':
     df_node, df_color = get_dataframe("sample/data.xlsx")
     # selector:color dict
     selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
+    print(selector_color_dicts)
     # row name:color dict
     name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
+    exit(df_node)
     # output file
     to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
     blockdiag_main(["-Tpdf", "sample/out.diag"]) # output pdf
