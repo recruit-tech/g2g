@@ -82,7 +82,11 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
         return None, None
     func = parse.parse("{}({})", string)
     if func is None:
-        return None, None
+        func_empty_arg = parse.parse("{}()", string)
+        if func_empty_arg is None:
+            return None, None
+        else:
+            return func_empty_arg[0], None
     name = func[0]
     args = func[1].split(",")
     return name, args
@@ -177,6 +181,14 @@ et
 
         if "color_map" in dic:
             color_map = dic["color_map"]
+            cmap = plt.cm.get_cmap(color_map)
+            mi = selected_row[column_name].min()
+            ma = selected_row[column_name].max()
+            selected_row["ratio"] = (selected_row[column_name] - mi)/(ma-mi)
+            for i, v in selected_row.iterrows():
+                color_value = cmap(v["ratio"])
+                color_code = '#%02X%02X%02X' % (int(color_value[3]*color_value[0]*255), int(color_value[3]*color_value[1]*255), int(color_value[3]*color_value[2]*255))
+                name_color_dict[v["名前"]] = color_code;
 
         elif "color" in dic:
             color = dic["color"]
@@ -254,8 +266,10 @@ def get_top(df_node, column_name, values):
     selected_row = selected_row.nlargest(value, column_name)
     return selected_row
 
+def all_row(df_node, column_name, values):
+    return df_node
+
 def min_max(df_node, column_name, values):
-    print(values)
     values[0].replace(" ", "")
     values[1].replace(" ", "")
     selected_row = df_node.copy();
@@ -264,7 +278,6 @@ def min_max(df_node, column_name, values):
 
     mini = df_node[column_name].min()
     maxi = df_node[column_name].max()
-    print(mini, maxi)
 
     if values[0][-3:] == "per":
         values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
@@ -278,6 +291,7 @@ def min_max(df_node, column_name, values):
     return selected_row
 
 default_selector_method_dict = {
+    "ALL": all_row,
     "TOP": get_top,
     "MINMAX": min_max,
 }
@@ -290,7 +304,6 @@ if __name__ == '__main__':
     print(selector_color_dicts)
     # row name:color dict
     name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
-    exit(df_node)
     # output file
     to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
     blockdiag_main(["-Tpdf", "sample/out.diag"]) # output pdf
