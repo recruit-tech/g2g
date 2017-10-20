@@ -270,7 +270,9 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
 
     # node information
     for key, row in df_node.iterrows():
-        output.append(row["名前"] + "[label=\"" + row["label"] + "\", color=\"" + name_color_dict[row["名前"]] +"\",height="+str(height)+",width="+str(width)+"];\n");
+        node_color = name_color_dict[row["名前"]]
+        text_color = "#000000" if int(node_color[1:3], 16)*0.299 + int(node_color[3:5], 16)*0.587 + int(node_color[5:7], 16)*0.114 > 127 else "#FFFFFF"
+        output.append(row["名前"] + "[label=\"" + row["label"] + "\", color=\"" + node_color + "\", textcolor=\"" + text_color + "\",height="+str(height)+",width="+str(width)+"];\n");
 
     # add last "}"
     output.append('}')
