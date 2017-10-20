@@ -11,6 +11,7 @@ from blockdiag.command import main as blockdiag_main
 
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+color_maps = sorted(m for m in plt.cm.datad if not m.endswith("_r"))
 
 def shape_string(string: str) -> str:
     """ shape string (remove space)
@@ -77,15 +78,41 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     Returns:
         function name, argument value.
     """
+    string = shape_string(string)
     if get_color_code(string) is not None:
         return None, None
     func = parse.parse("{}({})", string)
     if func is None:
-        return None, None
+        func_empty_arg = parse.parse("{}()", string)
+        if func_empty_arg is None:
+            return None, None
+        else:
+            return func_empty_arg[0], None
     name = func[0]
     args = func[1].split(",")
     return name, args
 
+def get_color_map_value(string: str) -> Optional[Tuple[str, float, float]]:
+    """ color_map(min, max) => colormap, min, max
+
+    separate function name and argument
+
+    Args:
+        string: string data to separate
+
+    Returns:
+        function name, min, max
+    """
+    string = shape_string(string)
+    if string in color_maps:
+        return string, None, None
+
+    func = parse.parse("{}({},{})", string)
+    if func is None:
+        return None, None, None
+    if func[0] not in color_maps:
+        return None, None, None
+    return func[0], float(func[1]), float(func[2])
 
 def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
     """ make selector_color_dict from df_color(excel file).
@@ -113,9 +140,12 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         row = str(row)
         code = get_color_code(row)
         method, values = get_method_value(row)
+        color_map, min_value, max_value = get_color_map_value(row)
         # color
         if code is not None:
             selector_number_color_dict.append(("color", code))
+        elif color_map is not None:
+            selector_number_color_dict.append(("color_map", {"name": color_map, "min": min_value, "max": max_value}))
         # selector
         elif method is not None:
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
@@ -124,9 +154,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
             selector_number_color_dict.append(("number" , row))
 
     # make MINMAX method from Color sandwiched between numbers
-    selector_color_dicts = [];
+    selector_color_dicts = []
     for i in range(len(selector_number_color_dict)):
-        if(selector_number_color_dict[i][0] == "color"):
+        if(selector_number_color_dict[i][0] == "color" or selector_number_color_dict[i][0] == "color_map"):
             # default number is nan
             # prv: preview row
             prv = ""
@@ -146,9 +176,9 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
                 nxt = selector_number_color_dict[i+1][1]
 
             # if this row means selector, add as it is
-            if(sel != ""): selector_color_dicts.append({"selector": sel, "color" : selector_number_color_dict[i][1]})
+            if(sel != ""): selector_color_dicts.append({"selector": sel, selector_number_color_dict[i][0] : selector_number_color_dict[i][1]})
             # else it means MINMAX selector
-            else: selector_color_dicts.append({"selector": {"method": "MINMAX", "values": [prv, nxt]}, "color" : selector_number_color_dict[i][1]})
+            else: selector_color_dicts.append({"selector": {"method": "MINMAX", "values": [prv, nxt]}, selector_number_color_dict[i][0] : selector_number_color_dict[i][1]})
 
     return selector_color_dicts
 
@@ -168,14 +198,26 @@ et
     for dic in selector_color_dicts:
         method = dic["selector"]["method"]
         values = dic["selector"]["values"]
-        color = dic["color"]
         if(method in selector_method_dict):
             selected_row = selector_method_dict[method](df_node, column_name, values)
             print(selected_row)
 
-        if "名前" in df_node.columns:
-            for n in selected_row["名前"]:
-                name_color_dict[n] = color
+        if "color_map" in dic:
+            color_map = dic["color_map"]["name"]
+            cmap = plt.cm.get_cmap(color_map)
+            mi = (selected_row[column_name].min() if (dic["color_map"]["min"] is None) else dic["color_map"]["min"])
+            ma = (selected_row[column_name].max() if (dic["color_map"]["max"] is None) else dic["color_map"]["max"])
+            selected_row["ratio"] = (selected_row[column_name] - mi)/(ma-mi)
+            for i, v in selected_row.iterrows():
+                color_value = cmap(v["ratio"])
+                color_code = '#%02X%02X%02X' % (int(color_value[3]*color_value[0]*255), int(color_value[3]*color_value[1]*255), int(color_value[3]*color_value[2]*255))
+                name_color_dict[v["名前"]] = color_code;
+
+        elif "color" in dic:
+            color = dic["color"]
+            if "名前" in df_node.columns:
+                for n in selected_row["名前"]:
+                    name_color_dict[n] = color
 
     return name_color_dict
 
@@ -247,8 +289,10 @@ def get_top(df_node, column_name, values):
     selected_row = selected_row.nlargest(value, column_name)
     return selected_row
 
+def all_row(df_node, column_name, values):
+    return df_node
+
 def min_max(df_node, column_name, values):
-    print(values)
     values[0].replace(" ", "")
     values[1].replace(" ", "")
     selected_row = df_node.copy();
@@ -257,7 +301,6 @@ def min_max(df_node, column_name, values):
 
     mini = df_node[column_name].min()
     maxi = df_node[column_name].max()
-    print(mini, maxi)
 
     if values[0][-3:] == "per":
         values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
@@ -271,6 +314,7 @@ def min_max(df_node, column_name, values):
     return selected_row
 
 default_selector_method_dict = {
+    "ALL": all_row,
     "TOP": get_top,
     "MINMAX": min_max,
 }
@@ -280,6 +324,7 @@ if __name__ == '__main__':
     df_node, df_color = get_dataframe("sample/data.xlsx")
     # selector:color dict
     selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
+    print(selector_color_dicts)
     # row name:color dict
     name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
     # output file
