@@ -350,7 +350,11 @@ if __name__ == '__main__':
     # read data
     df_node, df_color = get_dataframe("sample/data.xlsx")
     # selector:color dict
-    selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
+    try:
+        selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
+    except BaseException as e:
+        print("Error: " + str(e))
+        exit(1)
     print(selector_color_dicts)
     # row name:color dict
     try:
