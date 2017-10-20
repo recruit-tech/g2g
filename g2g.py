@@ -9,6 +9,52 @@ from typing import List, Tuple, Optional, Dict
 import parse
 from blockdiag.command import main as blockdiag_main
 
+# method names
+
+def get_top(df_node, column_name, values):
+    selected_row = df_node.copy();
+    value = int(values[0])
+    selected_row = df_node.copy()
+    selected_row = selected_row.nlargest(value, column_name)
+    return selected_row
+
+def all_row(df_node, column_name, values):
+    return df_node
+
+def min_max(df_node, column_name, values):
+    values[0].replace(" ", "")
+    values[1].replace(" ", "")
+    selected_row = df_node.copy();
+    left = -math.inf
+    right = math.inf
+
+    mini = df_node[column_name].min()
+    maxi = df_node[column_name].max()
+
+    try:
+        if values[0][-3:] == "per":
+            values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
+        if values[0] != "": left = float(values[0])
+    except ValueError as e:
+        raise ValueError("MINMAX exception \"" + values[0] + "\" is not float value. please input number or number+\"per\"")
+
+    try:
+        if values[1][-3:] == "per":
+            values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
+        if values[1] != "": right = float(values[1])
+    except ValueError as e:
+        raise ValueError("MINMAX exception \"" + values[1] + "\" is not float value. please input number or number+\"per\"")
+
+    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
+    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
+    return selected_row
+
+default_selector_method_dict = {
+    "ALL": all_row,
+    "TOP": get_top,
+    "MINMAX": min_max,
+}
+
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 color_maps = sorted(m for m in plt.cm.datad if not m.endswith("_r"))
@@ -86,11 +132,13 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
         func_empty_arg = parse.parse("{}()", string)
         if func_empty_arg is None:
             return None, None
-        else:
+        elif func_empty_arg[0] in default_selector_method_dict:
             return func_empty_arg[0], None
     name = func[0]
     args = func[1].split(",")
-    return name, args
+    if name in default_selector_method_dict:
+        return name, args
+    return None, None
 
 def get_color_map_value(string: str) -> Optional[Tuple[str, float, float]]:
     """ color_map(min, max) => colormap, min, max
@@ -151,8 +199,17 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
         # number
         else:
-            selector_number_color_dict.append(("number" , row))
+            try:
+                float(row)
+                selector_number_color_dict.append(("number" , row))
+            except:
+                try:
+                    float(row[:-3])
+                    selector_number_color_dict.append(("number" , row))
+                except:
+                    raise ValueError("\"" + row + "\" is not defined")
 
+    print(selector_number_color_dict)
     # make MINMAX method from Color sandwiched between numbers
     selector_color_dicts = []
     for i in range(len(selector_number_color_dict)):
@@ -199,8 +256,10 @@ et
         method = dic["selector"]["method"]
         values = dic["selector"]["values"]
         if(method in selector_method_dict):
-            selected_row = selector_method_dict[method](df_node, column_name, values)
-            print(selected_row)
+            try:
+                selected_row = selector_method_dict[method](df_node, column_name, values)
+            except BaseException as e:
+                raise BaseException(e)
 
         if "color_map" in dic:
             color_map = dic["color_map"]["name"]
@@ -270,7 +329,11 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
 
     # node information
     for key, row in df_node.iterrows():
-        node_color = name_color_dict[row["名前"]]
+        try:
+            node_color = name_color_dict[row["名前"]]
+        except KeyError as e:
+            print("Warning: " + row["名前"] + " is not colored. this node will be white")
+            continue
         text_color = "#000000" if int(node_color[1:3], 16)*0.299 + int(node_color[3:5], 16)*0.587 + int(node_color[5:7], 16)*0.114 > 127 else "#FFFFFF"
         output.append(row["名前"] + "[label=\"" + row["label"] + "\", color=\"" + node_color + "\", textcolor=\"" + text_color + "\",height="+str(height)+",width="+str(width)+"];\n");
 
@@ -282,53 +345,23 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.close()
 
 
-# method names
-
-def get_top(df_node, column_name, values):
-    selected_row = df_node.copy();
-    value = int(values[0])
-    selected_row = df_node.copy()
-    selected_row = selected_row.nlargest(value, column_name)
-    return selected_row
-
-def all_row(df_node, column_name, values):
-    return df_node
-
-def min_max(df_node, column_name, values):
-    values[0].replace(" ", "")
-    values[1].replace(" ", "")
-    selected_row = df_node.copy();
-    left = -math.inf
-    right = math.inf
-
-    mini = df_node[column_name].min()
-    maxi = df_node[column_name].max()
-
-    if values[0][-3:] == "per":
-        values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
-    if values[0] != "": left = float(values[0])
-
-    if values[1][-3:] == "per":
-        values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
-    if values[1] != "": right = float(values[1])
-    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
-    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
-    return selected_row
-
-default_selector_method_dict = {
-    "ALL": all_row,
-    "TOP": get_top,
-    "MINMAX": min_max,
-}
 
 if __name__ == '__main__':
     # read data
     df_node, df_color = get_dataframe("sample/data.xlsx")
     # selector:color dict
-    selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
+    try:
+        selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
+    except BaseException as e:
+        print("Error: " + str(e))
+        exit(1)
     print(selector_color_dicts)
     # row name:color dict
-    name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
+    try:
+        name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
+    except BaseException as e:
+        print("Error: " + str(e))
+        exit(1)
     # output file
     to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
     blockdiag_main(["-Tpdf", "sample/out.diag"]) # output pdf
