@@ -78,6 +78,7 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     Returns:
         function name, argument value.
     """
+    string = shape_string(string)
     if get_color_code(string) is not None:
         return None, None
     func = parse.parse("{}({})", string)
@@ -91,6 +92,27 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
     args = func[1].split(",")
     return name, args
 
+def get_color_map_value(string: str) -> Optional[Tuple[str, float, float]]:
+    """ color_map(min, max) => colormap, min, max
+
+    separate function name and argument
+
+    Args:
+        string: string data to separate
+
+    Returns:
+        function name, min, max
+    """
+    string = shape_string(string)
+    if string in color_maps:
+        return string, None, None
+
+    func = parse.parse("{}({},{})", string)
+    if func is None:
+        return None, None, None
+    if func[0] not in color_maps:
+        return None, None, None
+    return func[0], float(func[1]), float(func[2])
 
 def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
     """ make selector_color_dict from df_color(excel file).
@@ -118,11 +140,12 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
         row = str(row)
         code = get_color_code(row)
         method, values = get_method_value(row)
+        color_map, min_value, max_value = get_color_map_value(row)
         # color
         if code is not None:
             selector_number_color_dict.append(("color", code))
-        elif row in color_maps:
-            selector_number_color_dict.append(("color_map", row))
+        elif color_map is not None:
+            selector_number_color_dict.append(("color_map", {"name": color_map, "min": min_value, "max": max_value}))
         # selector
         elif method is not None:
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
@@ -180,10 +203,10 @@ et
             print(selected_row)
 
         if "color_map" in dic:
-            color_map = dic["color_map"]
+            color_map = dic["color_map"]["name"]
             cmap = plt.cm.get_cmap(color_map)
-            mi = selected_row[column_name].min()
-            ma = selected_row[column_name].max()
+            mi = (selected_row[column_name].min() if (dic["color_map"]["min"] is None) else dic["color_map"]["min"])
+            ma = (selected_row[column_name].max() if (dic["color_map"]["max"] is None) else dic["color_map"]["max"])
             selected_row["ratio"] = (selected_row[column_name] - mi)/(ma-mi)
             for i, v in selected_row.iterrows():
                 color_value = cmap(v["ratio"])
