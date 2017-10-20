@@ -199,8 +199,10 @@ et
         method = dic["selector"]["method"]
         values = dic["selector"]["values"]
         if(method in selector_method_dict):
-            selected_row = selector_method_dict[method](df_node, column_name, values)
-            print(selected_row)
+            try:
+                selected_row = selector_method_dict[method](df_node, column_name, values)
+            except BaseException as e:
+                raise BaseException(e)
 
         if "color_map" in dic:
             color_map = dic["color_map"]["name"]
@@ -270,7 +272,11 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
 
     # node information
     for key, row in df_node.iterrows():
-        node_color = name_color_dict[row["名前"]]
+        try:
+            node_color = name_color_dict[row["名前"]]
+        except KeyError as e:
+            print("Warning: " + row["名前"] + " is not colored. this node will be white")
+            continue
         text_color = "#000000" if int(node_color[1:3], 16)*0.299 + int(node_color[3:5], 16)*0.587 + int(node_color[5:7], 16)*0.114 > 127 else "#FFFFFF"
         output.append(row["名前"] + "[label=\"" + row["label"] + "\", color=\"" + node_color + "\", textcolor=\"" + text_color + "\",height="+str(height)+",width="+str(width)+"];\n");
 
@@ -304,13 +310,20 @@ def min_max(df_node, column_name, values):
     mini = df_node[column_name].min()
     maxi = df_node[column_name].max()
 
-    if values[0][-3:] == "per":
-        values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
-    if values[0] != "": left = float(values[0])
+    try:
+        if values[0][-3:] == "per":
+            values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
+        if values[0] != "": left = float(values[0])
+    except ValueError as e:
+        raise ValueError("MINMAX exception \"" + values[0] + "\" is not float value. please input number or number+\"per\"")
 
-    if values[1][-3:] == "per":
-        values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
-    if values[1] != "": right = float(values[1])
+    try:
+        if values[1][-3:] == "per":
+            values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
+        if values[1] != "": right = float(values[1])
+    except ValueError as e:
+        raise ValueError("MINMAX exception \"" + values[1] + "\" is not float value. please input number or number+\"per\"")
+
     if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
     if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
     return selected_row
@@ -328,7 +341,11 @@ if __name__ == '__main__':
     selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
     print(selector_color_dicts)
     # row name:color dict
-    name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
+    try:
+        name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
+    except BaseException as e:
+        print("Error: " + str(e))
+        exit(1)
     # output file
     to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
     blockdiag_main(["-Tpdf", "sample/out.diag"]) # output pdf
