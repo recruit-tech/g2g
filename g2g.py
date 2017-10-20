@@ -9,6 +9,52 @@ from typing import List, Tuple, Optional, Dict
 import parse
 from blockdiag.command import main as blockdiag_main
 
+# method names
+
+def get_top(df_node, column_name, values):
+    selected_row = df_node.copy();
+    value = int(values[0])
+    selected_row = df_node.copy()
+    selected_row = selected_row.nlargest(value, column_name)
+    return selected_row
+
+def all_row(df_node, column_name, values):
+    return df_node
+
+def min_max(df_node, column_name, values):
+    values[0].replace(" ", "")
+    values[1].replace(" ", "")
+    selected_row = df_node.copy();
+    left = -math.inf
+    right = math.inf
+
+    mini = df_node[column_name].min()
+    maxi = df_node[column_name].max()
+
+    try:
+        if values[0][-3:] == "per":
+            values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
+        if values[0] != "": left = float(values[0])
+    except ValueError as e:
+        raise ValueError("MINMAX exception \"" + values[0] + "\" is not float value. please input number or number+\"per\"")
+
+    try:
+        if values[1][-3:] == "per":
+            values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
+        if values[1] != "": right = float(values[1])
+    except ValueError as e:
+        raise ValueError("MINMAX exception \"" + values[1] + "\" is not float value. please input number or number+\"per\"")
+
+    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
+    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
+    return selected_row
+
+default_selector_method_dict = {
+    "ALL": all_row,
+    "TOP": get_top,
+    "MINMAX": min_max,
+}
+
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 color_maps = sorted(m for m in plt.cm.datad if not m.endswith("_r"))
@@ -86,11 +132,13 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
         func_empty_arg = parse.parse("{}()", string)
         if func_empty_arg is None:
             return None, None
-        else:
+        elif func_empty_arg[0] in default_selector_method_dict:
             return func_empty_arg[0], None
     name = func[0]
     args = func[1].split(",")
-    return name, args
+    if name in default_selector_method_dict:
+        return name, args
+    return None, None
 
 def get_color_map_value(string: str) -> Optional[Tuple[str, float, float]]:
     """ color_map(min, max) => colormap, min, max
@@ -151,8 +199,17 @@ def get_selector_color_dicts(df_color: pd.DataFrame, selector_method_dict):
             selector_number_color_dict.append(("selector", {"method": method, "values": values}))
         # number
         else:
-            selector_number_color_dict.append(("number" , row))
+            try:
+                float(row)
+                selector_number_color_dict.append(("number" , row))
+            except:
+                try:
+                    float(row[:-3])
+                    selector_number_color_dict.append(("number" , row))
+                except:
+                    raise ValueError("\"" + row + "\" is not defined")
 
+    print(selector_number_color_dict)
     # make MINMAX method from Color sandwiched between numbers
     selector_color_dicts = []
     for i in range(len(selector_number_color_dict)):
@@ -288,51 +345,6 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.close()
 
 
-# method names
-
-def get_top(df_node, column_name, values):
-    selected_row = df_node.copy();
-    value = int(values[0])
-    selected_row = df_node.copy()
-    selected_row = selected_row.nlargest(value, column_name)
-    return selected_row
-
-def all_row(df_node, column_name, values):
-    return df_node
-
-def min_max(df_node, column_name, values):
-    values[0].replace(" ", "")
-    values[1].replace(" ", "")
-    selected_row = df_node.copy();
-    left = -math.inf
-    right = math.inf
-
-    mini = df_node[column_name].min()
-    maxi = df_node[column_name].max()
-
-    try:
-        if values[0][-3:] == "per":
-            values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
-        if values[0] != "": left = float(values[0])
-    except ValueError as e:
-        raise ValueError("MINMAX exception \"" + values[0] + "\" is not float value. please input number or number+\"per\"")
-
-    try:
-        if values[1][-3:] == "per":
-            values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
-        if values[1] != "": right = float(values[1])
-    except ValueError as e:
-        raise ValueError("MINMAX exception \"" + values[1] + "\" is not float value. please input number or number+\"per\"")
-
-    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
-    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
-    return selected_row
-
-default_selector_method_dict = {
-    "ALL": all_row,
-    "TOP": get_top,
-    "MINMAX": min_max,
-}
 
 if __name__ == '__main__':
     # read data
