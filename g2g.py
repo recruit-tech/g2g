@@ -304,9 +304,17 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.writelines(output)
     f.close()
 
+def print_usage():
+    print('Usage: python {} excel_file diag_file'.format(__file__))
+    print("Arguments:")
+    print("  excel_file: excel file contain node and color data")
+    print("  diag_file: file in which page transitions are written in graphs")
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 4:
+        print_usage()
+        exit(1)
     # read data
     df_node, df_color = get_dataframe(sys.argv[1])
     # selector:color dict
