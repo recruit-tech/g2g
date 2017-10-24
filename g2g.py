@@ -4,60 +4,21 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
-import math
 from typing import List, Tuple, Optional, Dict
 import parse
 from blockdiag.command import main as blockdiag_main
-
-# method names
-
-def get_top(df_node, column_name, values):
-    selected_row = df_node.copy();
-    value = int(values[0])
-    selected_row = df_node.copy()
-    selected_row = selected_row.nlargest(value, column_name)
-    return selected_row
-
-def all_row(df_node, column_name, values):
-    return df_node
-
-def min_max(df_node, column_name, values):
-    values[0].replace(" ", "")
-    values[1].replace(" ", "")
-    selected_row = df_node.copy();
-    left = -math.inf
-    right = math.inf
-
-    mini = df_node[column_name].min()
-    maxi = df_node[column_name].max()
-
-    try:
-        if values[0][-3:] == "per":
-            values[0] = (maxi - mini)*float(values[0][:-3])/100.0 + mini
-        if values[0] != "": left = float(values[0])
-    except ValueError as e:
-        raise ValueError("MINMAX exception \"" + values[0] + "\" is not float value. please input number or number+\"per\"")
-
-    try:
-        if values[1][-3:] == "per":
-            values[1] = (maxi - mini)*float(values[1][:-3])/100.0 + mini
-        if values[1] != "": right = float(values[1])
-    except ValueError as e:
-        raise ValueError("MINMAX exception \"" + values[1] + "\" is not float value. please input number or number+\"per\"")
-
-    if(left != ""): selected_row = selected_row[left <= selected_row[column_name]]
-    if(right != ""): selected_row = selected_row[right > selected_row[column_name]]
-    return selected_row
-
-default_selector_method_dict = {
-    "ALL": all_row,
-    "TOP": get_top,
-    "MINMAX": min_max,
-}
+import sys
+import methods
+import math
 
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
+colors["danger"] = "#FF0C0C"
+colors["safe"] = "#041A99"
+colors["appeal"] = "#00FF6E"
+colors["superappeal"] = "#FFFF00"
 color_maps = sorted(m for m in plt.cm.datad if not m.endswith("_r"))
+color_maps.append("default")
 
 def shape_string(string: str) -> str:
     """ shape string (remove space)
@@ -132,11 +93,11 @@ def get_method_value(string: str) -> Optional[Tuple[str, List[float]]]:
         func_empty_arg = parse.parse("{}()", string)
         if func_empty_arg is None:
             return None, None
-        elif func_empty_arg[0] in default_selector_method_dict:
+        elif func_empty_arg[0] in methods.selector_method_dict:
             return func_empty_arg[0], None
     name = func[0]
     args = func[1].split(",")
-    if name in default_selector_method_dict:
+    if name in methods.selector_method_dict:
         return name, args
     return None, None
 
@@ -263,6 +224,8 @@ et
 
         if "color_map" in dic:
             color_map = dic["color_map"]["name"]
+            if(color_map == "default"):
+                color_map = "coolwarm"
             cmap = plt.cm.get_cmap(color_map)
             mi = (selected_row[column_name].min() if (dic["color_map"]["min"] is None) else dic["color_map"]["min"])
             ma = (selected_row[column_name].max() if (dic["color_map"]["max"] is None) else dic["color_map"]["max"])
@@ -344,25 +307,26 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.writelines(output)
     f.close()
 
+def print_usage():
+    print('Usage: python {} excel_file diag_file out'.format(__file__))
+    print("Arguments:")
+    print("  excel_file: excel file contain node and color data")
+    print("  diag_file: file in which page transitions are written in graphs")
+    print("  out: filename for output. this app output 2files : <out>.pdf & <out>.diag ")
 
 
 if __name__ == '__main__':
-    # read data
-    df_node, df_color = get_dataframe("sample/data.xlsx")
-    # selector:color dict
-    try:
-        selector_color_dicts = get_selector_color_dicts(df_color, default_selector_method_dict)
-    except BaseException as e:
-        print("Error: " + str(e))
+    if len(sys.argv) < 4:
+        print_usage()
         exit(1)
+    # read data
+    df_node, df_color = get_dataframe(sys.argv[1])
+    # selector:color dict
+    selector_color_dicts = get_selector_color_dicts(df_color, methods.selector_method_dict)
     print(selector_color_dicts)
     # row name:color dict
-    try:
-        name_color_dict = get_name_color_dict(df_node,df_color.columns[0],default_selector_method_dict, selector_color_dicts)
-    except BaseException as e:
-        print("Error: " + str(e))
-        exit(1)
+    name_color_dict = get_name_color_dict(df_node,df_color.columns[0],methods.selector_method_dict, selector_color_dicts)
     # output file
-    to_diag("sample/out.diag", "sample/map.diag", df_node, name_color_dict)
-    blockdiag_main(["-Tpdf", "sample/out.diag"]) # output pdf
-    blockdiag_main(["sample/out.diag"]) # output png
+    to_diag(sys.argv[3] + ".diag", sys.argv[2], df_node, name_color_dict)
+    blockdiag_main(["-Tpdf", sys.argv[3] + ".diag"]) # output pdf
+    blockdiag_main([sys.argv[3]+".diag"]) # output png
