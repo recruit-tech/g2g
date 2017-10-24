@@ -18,6 +18,7 @@ colors["safe"] = "#041A99"
 colors["appeal"] = "#00FF6E"
 colors["superappeal"] = "#FFFF00"
 color_maps = sorted(m for m in plt.cm.datad if not m.endswith("_r"))
+color_maps.append("default")
 
 def shape_string(string: str) -> str:
     """ shape string (remove space)
@@ -223,6 +224,8 @@ et
 
         if "color_map" in dic:
             color_map = dic["color_map"]["name"]
+            if(color_map == "default"):
+                color_map = "coolwarm"
             cmap = plt.cm.get_cmap(color_map)
             mi = (selected_row[column_name].min() if (dic["color_map"]["min"] is None) else dic["color_map"]["min"])
             ma = (selected_row[column_name].max() if (dic["color_map"]["max"] is None) else dic["color_map"]["max"])
@@ -305,10 +308,11 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.close()
 
 def print_usage():
-    print('Usage: python {} excel_file diag_file'.format(__file__))
+    print('Usage: python {} excel_file diag_file out'.format(__file__))
     print("Arguments:")
     print("  excel_file: excel file contain node and color data")
     print("  diag_file: file in which page transitions are written in graphs")
+    print("  out: filename for output. this app output 2files : <out>.pdf & <out>.diag ")
 
 
 if __name__ == '__main__':
