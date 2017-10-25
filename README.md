@@ -12,12 +12,10 @@
 
 # How To Use
 
-(仕様が固まっていないので概要のみ)
-
-1. .xlsxファイルを書く
-2. node-edgeの情報を書く
-2. pythonを起動する
-3. blockdiagを起動する
+1. .xlsxファイルに各ページ(ノード)の情報を書く
+2. .diagファイルにページ間の遷移情報を書く
+2. `python g2g.py xlsxファイル diagファイル 出力ファイル名` と書く
+3. `出力ファイル名.diag`ファイルと, `出力ファイル名.pdf`ファイルが生成される．
 
 ## Excelファイルの書き方
 
@@ -33,22 +31,19 @@ sheetはそれぞれ
 
 ### readme sheet
 
-excelシートの使いかたを書くスペースです
-node や colorの具体的な書き方の例はこちらのシートを参照してください
+* excelシートの使いかたやメモなどを書くスペースです
+* プログラム実行時には無視されます．
+* node や colorの具体的な書き方の例はreadme sheetを参照してください
 
 ### node sheet
 
-各nodeの設定を書くスペースです
-nodeとそれに付随する情報を書きます(アクション貢献度と訪問数など)
+* 各nodeの設定を書くスペースです
+* nodeとそれに付随する情報を書きます(訪問数や離脱率など)
 
 ### color
 
 色の設定を行います。
-x-yの間はRGB(255, 255,255),
-y-zの間はRGB(0,0,0)
-のようなthreadsholdな指定と
-redtoblue
-などのグラデーションの設定ができるようになっています
+詳しくは，sampleのreadme sheetを確認してください．
 
 ## node-edge情報の記述方法
 
@@ -62,7 +57,8 @@ blockdiag {
    A -> E -> F -> G;
 }
 ```
+# sampleの実行方法
 
-# ToDo
-
-* Exampleを追加する
+```
+python g2g.py sample/data.xlsx sample/map.diag out
+```
