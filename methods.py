@@ -7,6 +7,13 @@ def get_top(df_node, column_name, values):
     selected_row = selected_row.nlargest(value, column_name)
     return selected_row
 
+def get_bottom(df_node, column_name, values):
+    selected_row = df_node.copy();
+    value = int(values[0])
+    selected_row = df_node.copy()
+    selected_row = selected_row.nsmallest(value, column_name)
+    return selected_row
+
 def all_row(df_node, column_name, values):
     return df_node
 
@@ -41,5 +48,6 @@ def min_max(df_node, column_name, values):
 selector_method_dict = {
     "ALL": all_row,
     "TOP": get_top,
+    "BOTTOM": get_bottom,
     "MINMAX": min_max,
 }
