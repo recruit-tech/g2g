@@ -62,3 +62,59 @@ blockdiag {
 ```
 python g2g.py sample/data.xlsx sample/map.diag out
 ```
+
+# 独自の選択関数の追加方法
+
+excelのcolorで必要な関数を独自に定義することができます．
+
+`method.py`に関数を追加します．
+
+関数を追加するために，3つの手順が必要です
+
+1. 3つの引数を持つ関数を定義する
+2. 関数を実装する
+3. `selector_method_dict`に名前を追加する
+
+## 3つの引数を持つ関数を定義する
+
+関数名は自由で，3つの引数を持つ関数を定義します．
+
+```python
+def method_name(df_node, column_name, values)
+```
+* `df_node`: excelファイルのnodeに対応するnodeの情報が渡されます．(pandasのDataframe型)
+* `column_name`: excelファイルの`color`で選択されている行の情報が渡されます(str型)
+* `values`: excelファイルで指定された値が渡されます(strのarray)
+
+## 関数を実装する
+
+関数の返り値は，`df_node`から選択した行だけを残すようにフィルタした結果を返します(pandasのDataframe型)
+
+以下の例は`TOP`のものです．`TOP(x)`では，ひとつの引数が渡され上位`x`個を選択することができる関数です．
+```python
+def get_top(df_node, column_name, values): # 3つの引数を持つ関数を定義する
+    selected_row = df_node.copy();
+    value = int(values[0]) # valueをint型に変更する
+    selected_row = df_node.copy() # 行を選択するためのdataframeを用意する
+    selected_row = selected_row.nlargest(value, column_name) # column_name列に関する上位value個を取り出す
+    return selected_row # 選択した結果を返す
+```
+
+## `selector_method_dict`に名前を追加する
+
+`methods.py`の一番下に以下のようなdictionaryがあります．
+これに名前を登録することで，excelファイルから呼び出すことができます．
+
+* key: excelファイルから呼び出す関数名
+* value: keyで指定した関数名から呼び出す関数
+
+keyはexcelの関数にならってすべて大文字の命名をしています．
+
+```python
+selector_method_dict = {
+    "ALL": all_row,
+    "TOP": get_top,
+    "BOTTOM": get_bottom,
+    "MINMAX": min_max,
+}
+```
