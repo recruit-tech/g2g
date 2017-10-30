@@ -1,0 +1,17 @@
+blockdiag==1.5.3
+cycler==0.10.0
+funcparserlib==0.3.6
+matplotlib==2.1.0
+numpy==1.13.3
+olefile==0.44
+pandas==0.21.0
+parse==1.8.2
+Pillow==4.3.0
+pyparsing==2.2.0
+python-dateutil==2.6.1
+pytz==2017.3
+reportlab==3.4.0
+six==1.11.0
+typing==3.6.2
+webcolors==1.7
+xlrd==1.1.0

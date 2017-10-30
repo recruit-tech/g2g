@@ -1,0 +1,17 @@
+blockdiag
+cycler
+funcparserlib
+matplotlib
+numpy
+olefile
+pandas
+parse
+Pillow
+pyparsing
+python-dateutil
+pytz
+reportlab
+six
+typing
+webcolors
+xlrd
