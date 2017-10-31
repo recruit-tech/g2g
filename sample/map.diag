@@ -1,7 +1,7 @@
 blockdiag{
 	top_page -> auto_make;
 	top_page -> easy;
-	auto_make -> graph;
-	easy -> graph;
-	graph -> make -> tool;
+	auto_make -> graph_tool;
+	easy -> graph_tool;
+	graph_tool;
 }
