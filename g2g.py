@@ -274,6 +274,8 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     # remove last "}"
     output = output[:last_bracket_pos]
 
+    output.insert(1, "default_fontsize=16;\n")
+
     output.append('\n')
 
     # get text_
@@ -286,7 +288,7 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
         max_text_width_length = max(max_text_width_length, cnt)
 
     # set node size
-    font_size = 7
+    font_size = 10
     height = 40 + max_text_height_count*font_size # default heigth size is 40
     width = 128 + max_text_width_length*font_size # default width size is 128
 
@@ -329,4 +331,4 @@ if __name__ == '__main__':
     # output file
     to_diag(sys.argv[3] + ".diag", sys.argv[2], df_node, name_color_dict)
     blockdiag_main(["-Tpdf", sys.argv[3] + ".diag"]) # output pdf
-    blockdiag_main([sys.argv[3]+".diag"]) # output png
+    blockdiag_main(["-a", sys.argv[3]+".diag"]) # output png
