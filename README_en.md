@@ -1,131 +1,126 @@
+
 # g2g
 
-サービスのTOP画面からの遷移図をnode-edge な graphにうまく描画してくれるツールです
+g2g is a graph(graph theory) drawing tool for service transition diagram.
+
 ![](./sample/out.png)
 
-# Quick Start
+# Getting Started
 
+## Prerequisites
+
+```
+git
+python 3.6.3
+```
+
+## Install & Running sample
 ```
 git clone https://github.com/recruit-tech/g2g
 cd g2g
+pip install -r requirements.txt
 python g2g.py sample/data.xlsx sample/map.diag out # => make out.png, out.pdf, out.diag
 ```
 
-`git`コマンドに失敗する方は，`git`のインストールを試みてください．
-あるいは，githubのページからDownload Zipを選択してzipを解凍してください．
-
-# requirements
-
-python: 3.6.3
-
-必要なパッケージは，
-```
-pip install -r requirements.txt
-```
-でインストールすることができます．もし，実行できない場合はバージョン互換性に問題がある可能性があります．その場合は，
-```
-pip install -c constraints.txt -r requirements.txt
-```
-を試してみてください．
 # How To Use
 
-1. .xlsxファイルに各ページ(ノード)の情報を書く
-2. .diagファイルにページ間の遷移情報を書く
-2. `python g2g.py xlsxファイル diagファイル 出力ファイル名` と書く
-3. `出力ファイル名.diag`ファイルと, `出力ファイル名.pdf`ファイルが生成される．
+1. write node datas to .xlsx file.
+2. write page transition data to .diag file
+3. `python g2g.py xlsx_file diag_file output_filename` と書く
+4. generate `output_filename.diag` & `output_filename.pdf`.
 
 ## Excelファイルの書き方
 
-各sheetに必要な情報を書きます
+write datas to each sheets.
 
-sheetはそれぞれ
+excel file contains the following three sheets.
 
-* readme
-* node
-* color
-
-の3つに分類されます
+* readme sheet
+* node sheet 
+* color sheet
 
 ### readme sheet
 
-* excelシートの使いかたやメモなどを書くスペースです
-* プログラム実行時には無視されます．
-* node や colorの具体的な書き方の例はreadme sheetを参照してください
+* readme sheet is ignored at run time.
+* please use it for a memo.
+* this sheet contain "how to write excel sheets (now japanese only...)".
 
 ### node sheet
 
-* 各nodeの設定を書くスペースです
-* nodeとそれに付随する情報を書きます(訪問数や離脱率など)
+* this sheet contain the data of nodes.
 
 ### color
 
-色の設定を行います。
-詳しくは，sampleのreadme sheetを確認してください．
+* this sheet contain the color data of nodes.
+* in detail, please confirm "readme sheet"
 
-## node-edge情報の記述方法
+## how to write node-edge datas
 
-blockdiagの書き方です。
-こちらを参照してください.(http://blockdiag.com/ja/blockdiag/examples.html#simple-diagram)
+* write `.diag` file in blockdiag format (http://blockdiag.com/ja/blockdiag/examples.html#simple-diagram)
 
-かんたんな例
+### example
 ```
 blockdiag {
    A -> B -> C -> D;
    A -> E -> F -> G;
 }
 ```
-# sampleの実行方法
+
+# How To run
+
+```
+python g2g.py excel_file diag_file output_filename(without filename extension)
+```
 
 ```
 python g2g.py sample/data.xlsx sample/map.diag out
 ```
 
-# 独自の選択関数の追加方法
+# For add selection function.
 
-excelのcolorで必要な関数を独自に定義することができます．
+This app can be added selection functions for "color sheet" yourself.
 
-`method.py`に関数を追加します．
+To add functions, please do the following three steps.
 
-関数を追加するために，3つの手順が必要です
+1. open `method.py` by editor.
+2. define a function with three arguments.
+3. implement the function
+4. add function name and function to `selector_method_dict`.
 
-1. 3つの引数を持つ関数を定義する
-2. 関数を実装する
-3. `selector_method_dict`に名前を追加する
+## define a function with three arguments.
 
-## 3つの引数を持つ関数を定義する
-
-関数名は自由で，3つの引数を持つ関数を定義します．
+define a function with three arguments.
+function name is free to decide.
 
 ```python
 def method_name(df_node, column_name, values)
 ```
-* `df_node`: excelファイルのnodeに対応するnodeの情報が渡されます．(pandasのDataframe型)
-* `column_name`: excelファイルの`color`で選択されている行の情報が渡されます(str型)
-* `values`: excelファイルで指定された値が渡されます(strのarray)
+* `df_node`: node data coresspond to "excel node sheet" (pandas Dataframe)
+* `column_name`: column name selected by "excel color sheet" (str type)
+* `values`: values specified as an argument with excel ([str] type)
 
-## 関数を実装する
+## implement the function
 
-関数の返り値は，`df_node`から選択した行だけを残すようにフィルタした結果を返します(pandasのDataframe型)
+the return value of the functions is the result of filtering to leave only the line selected from `df_node` (pandas Dataframe)
 
-以下の例は`TOP`のものです．`TOP(x)`では，ひとつの引数が渡され上位`x`個を選択することができる関数です．
+the following example is `TOP`
+`TOP(X)` is a function that allows one argument to be passed and upper `x` will be selected.
 ```python
-def get_top(df_node, column_name, values): # 3つの引数を持つ関数を定義する
+def get_top(df_node, column_name, values): # define a function with three arguments
     selected_row = df_node.copy();
-    value = int(values[0]) # valueをint型に変更する
-    selected_row = df_node.copy() # 行を選択するためのdataframeを用意する
-    selected_row = selected_row.nlargest(value, column_name) # column_name列に関する上位value個を取り出す
-    return selected_row # 選択した結果を返す
+    value = int(values[0]) # cast values to int
+    selected_row = df_node.copy() # prepare a dataframe to select lines.
+    selected_row = selected_row.nlargest(value, column_name) # filter upper top `value`
+    return selected_row # return filtered dataframe
 ```
 
-## `selector_method_dict`に名前を追加する
+## add function name and function to `selector_method_dict`.
 
-`methods.py`の一番下に以下のようなdictionaryがあります．
-これに名前を登録することで，excelファイルから呼び出すことができます．
+the following dictionary type variable at the bottom of "methods.py".
+By registering a name on this, you can call it from an excel file.
 
-* key: excelファイルから呼び出す関数名
-* value: keyで指定した関数名から呼び出す関数
-
-keyはexcelの関数にならってすべて大文字の命名をしています．
+* key: function name to call from excel file.
+* value: function.
 
 ```python
 selector_method_dict = {
