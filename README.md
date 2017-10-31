@@ -1,6 +1,18 @@
 # What's this
 
-サービスのTOP画面からの遷移図をnode-edge な raphにうまく描画してくれるツールです
+サービスのTOP画面からの遷移図をnode-edge な graphにうまく描画してくれるツールです
+![](./sample/out.png)
+
+# Quick Start
+
+```
+git clone https://github.com/recruit-tech/g2g
+cd g2g
+python g2g.py sample/data.xlsx sample/map.diag out # => make out.png, out.pdf, out.diag
+```
+
+`git`コマンドに失敗する方は，`git`のインストールを試みてください．
+あるいは，githubのページからDownload Zipを選択してzipを解凍してください．
 
 # requirements
 
