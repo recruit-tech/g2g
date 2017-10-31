@@ -10,6 +10,8 @@ from blockdiag.command import main as blockdiag_main
 import sys
 import methods
 import math
+import platform
+import os
 
 # matplotlib colors
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
@@ -310,12 +312,12 @@ def to_diag(output_filename:str, edge_filename:str, df_node:pd.DataFrame, name_c
     f.close()
 
 def print_usage():
-    print('Usage: python {} excel_file diag_file out'.format(__file__))
+    print('Usage: python {} excel_file diag_file out [fontmaprc]'.format(__file__))
     print("Arguments:")
     print("  excel_file: excel file contain node and color data")
     print("  diag_file: file in which page transitions are written in graphs")
     print("  out: filename for output. this app output 2files : <out>.pdf & <out>.diag ")
-
+    print("  fontmaprc: font setting file");
 
 if __name__ == '__main__':
     if len(sys.argv) < 4:
@@ -330,5 +332,10 @@ if __name__ == '__main__':
     name_color_dict = get_name_color_dict(df_node,df_color.columns[0],methods.selector_method_dict, selector_color_dicts)
     # output file
     to_diag(sys.argv[3] + ".diag", sys.argv[2], df_node, name_color_dict)
-    blockdiag_main(["-Tpdf", sys.argv[3] + ".diag"]) # output pdf
-    blockdiag_main(["-a", sys.argv[3]+".diag"]) # output png
+    if len(sys.argv) < 5:
+        os.system("blockdiag  -Tpdf " + sys.argv[3] + ".diag")
+        os.system("blockdiag  -a  " + sys.argv[3] + ".diag")
+    else:
+        print("blockdiag --fontmap="+sys.argv[4]+" -Tpdf " + sys.argv[3] + ".diag")
+        os.system("blockdiag --fontmap="+sys.argv[4]+" -Tpdf " + sys.argv[3] + ".diag")
+        os.system("blockdiag  -a --fontmap="+sys.argv[4] + " " + sys.argv[3] + ".diag")
