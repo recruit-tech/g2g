@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
 でインストールすることができます．もし，実行できない場合はバージョン互換性に問題がある可能性があります．その場合は，
 ```
-pip install -c constraints.txt -r 
+pip install -c constraints.txt -r requirements.txt
 ```
 を試してみてください．
 # How To Use
