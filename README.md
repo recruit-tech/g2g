@@ -82,7 +82,7 @@ fontmaprc は以下のようになっており、ファイル名を変更する�
 sansserif-normal: /Library/Fonts/Arial Unicode.ttf
 ```
 
-
+## 実行例
 ```
 python g2g.py sample/data.xlsx sample/map.diag out
 ```
