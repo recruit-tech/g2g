@@ -19,7 +19,18 @@ python 3.6.3
 git clone https://github.com/recruit-tech/g2g
 cd g2g
 pip install -r requirements.txt
+```
+
+### linux
+```
 python g2g.py sample/data.xlsx sample/map.diag out # => make out.png, out.pdf, out.diag
+```
+
+### mac
+In the environment of mac, garbled characters were confirmed.
+If garbled characters occur with the following command, please set fontmaprc.
+```
+python g2g.py sample/data.xlsx sample/map.diag out fontmaprc # => make out.png, out.pdf, out.diag
 ```
 
 # How To Use
@@ -69,8 +80,10 @@ blockdiag {
 # How To run
 
 ```
-python g2g.py excel_file diag_file output_filename(without filename extension)
+python g2g.py excel_file diag_file output_filename(without filename extension) [fontmaprc]
 ```
+
+to config font please edit fontmaprc.
 
 ```
 python g2g.py sample/data.xlsx sample/map.diag out

@@ -17,7 +17,18 @@ python 3.6.3
 git clone https://github.com/recruit-tech/g2g
 cd g2g
 pip install -r requirements.txt
+```
+
+### linux
+```
 python g2g.py sample/data.xlsx sample/map.diag out # => make out.png, out.pdf, out.diag
+```
+
+### mac
+macの環境では，文字化けが確認されました．
+もし，以下のコマンドでも文字化けが起きる場合，fontmaprcを設定してください．
+```
+python g2g.py sample/data.xlsx sample/map.diag out fontmaprc # => make out.png, out.pdf, out.diag
 ```
 
 # How To Use
