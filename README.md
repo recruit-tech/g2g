@@ -1,32 +1,25 @@
-# What's this
+# g2g
 
 サービスのTOP画面からの遷移図をnode-edge な graphにうまく描画してくれるツールです
 ![](./sample/out.png)
 
-# Quick Start
+# Getting Started
 
+## Prerequisites
+
+```
+git
+python 3.6.3
+```
+
+## Install & Running sample
 ```
 git clone https://github.com/recruit-tech/g2g
 cd g2g
+pip install -r requirements.txt
 python g2g.py sample/data.xlsx sample/map.diag out # => make out.png, out.pdf, out.diag
 ```
 
-`git`コマンドに失敗する方は，`git`のインストールを試みてください．
-あるいは，githubのページからDownload Zipを選択してzipを解凍してください．
-
-# requirements
-
-python: 3.6.3
-
-必要なパッケージは，
-```
-pip install -r requirements.txt
-```
-でインストールすることができます．もし，実行できない場合はバージョン互換性に問題がある可能性があります．その場合は，
-```
-pip install -c constraints.txt -r requirements.txt
-```
-を試してみてください．
 # How To Use
 
 1. .xlsxファイルに各ページ(ノード)の情報を書く
@@ -50,7 +43,7 @@ sheetはそれぞれ
 
 * excelシートの使いかたやメモなどを書くスペースです
 * プログラム実行時には無視されます．
-* node や colorの具体的な書き方の例はreadme sheetを参照してください
+* node や colorの具体的な書き方の例はExcelのreadme sheetを参照してください
 
 ### node sheet
 
@@ -60,12 +53,13 @@ sheetはそれぞれ
 ### color
 
 色の設定を行います。
-詳しくは，sampleのreadme sheetを確認してください．
+詳しくは，sampleのExcelにあるreadme sheetを確認してください．
 
 ## node-edge情報の記述方法
 
 blockdiagの書き方です。
 こちらを参照してください.(http://blockdiag.com/ja/blockdiag/examples.html#simple-diagram)
+.diagファイルとして保存します．
 
 かんたんな例
 ```
@@ -74,7 +68,11 @@ blockdiag {
    A -> E -> F -> G;
 }
 ```
-# sampleの実行方法
+# 実行方法
+
+```
+python g2g.py excelファイル diagファイル 出力ファイル名(拡張子はなし)
+```
 
 ```
 python g2g.py sample/data.xlsx sample/map.diag out
