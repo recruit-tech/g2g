@@ -24,8 +24,8 @@ python g2g.py sample/data.xlsx sample/map.diag out # => make out.png, out.pdf, o
 
 1. .xlsxファイルに各ページ(ノード)の情報を書く
 2. .diagファイルにページ間の遷移情報を書く
-2. `python g2g.py xlsxファイル diagファイル 出力ファイル名` と書く
-3. `出力ファイル名.diag`ファイルと, `出力ファイル名.pdf`ファイルが生成される．
+3. `python g2g.py xlsxファイル diagファイル 出力ファイル名` と書く
+4. `出力ファイル名.diag`ファイルと, `出力ファイル名.pdf`ファイルが生成される．
 
 ## Excelファイルの書き方
 
@@ -70,9 +70,18 @@ blockdiag {
 ```
 # 実行方法
 
+* fontmaprcを指定すると、フォントを変更することができます
+* 文字化け等発生する場合は、こちらを引数に追加してください。
 ```
-python g2g.py excelファイル diagファイル 出力ファイル名(拡張子はなし)
+python g2g.py excelファイル diagファイル 出力ファイル名(拡張子はなし) [fontmaprc]
 ```
+
+fontmaprc は以下のようになっており、ファイル名を変更することでフォントを変えることができます。
+```
+[fontmap]
+sansserif-normal: /Library/Fonts/Arial Unicode.ttf
+```
+
 
 ```
 python g2g.py sample/data.xlsx sample/map.diag out
